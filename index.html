@@ -112,16 +112,18 @@
         步驟：<br>
         1. 先在 Google Cloud 建立 YouTube Data API v3 的 API Key。<br>
         2. 填入下面的 API Key（只會在你自己的瀏覽器使用）。<br>
-        3. 可自訂條件搜尋，或使用「本週 Shorts Top 50」快捷鍵。
+        3. 可自訂條件搜尋，或使用「本週 Shorts Top 50」快捷鍵。<br>
+        4. 關鍵字可以留空，只用地區 + 類別 + 時間來抓熱門影片。
       </div>
 
       <label for="apiKey">YouTube API Key</label>
       <input id="apiKey" type="password" placeholder="請貼上你的 API Key" />
 
-      <label for="query">關鍵字 / 類型（支援中英文，例如：minecraft shorts, 貓咪 shorts）</label>
-      <input id="query" type="text" value="minecraft shorts" />
+      <!-- 這裡改成「可留空」 -->
+      <label for="query">關鍵字 / 類型（可留空，支援中英文，例如：minecraft shorts, 貓咪 shorts）</label>
+      <input id="query" type="text" value="" />
 
-      <!-- 新增：地區 + 類別選項 -->
+      <!-- 地區 + 類別選項 -->
       <div class="two-cols">
         <div>
           <label for="region">地區（Region）</label>
@@ -198,7 +200,7 @@
       <div class="btn-row" style="display:flex; flex-direction:column; gap:8px;">
         <button id="searchBtn" type="button">依上方條件搜尋</button>
         <button id="weeklyShortsBtn" type="button">
-          本週 Shorts Top 50（使用上方關鍵字）
+          本週 Shorts Top 50（可有關鍵字，也可留空）
         </button>
       </div>
       <div id="status"></div>
@@ -263,7 +265,7 @@
     // 一般「依上方條件搜尋」按鈕
     searchBtn.addEventListener("click", async () => {
       const apiKey = apiKeyInput.value.trim();
-      const query = queryInput.value.trim();
+      const query = queryInput.value.trim();  // 可為空字串
       const startDate = startDateInput.value;
       const endDate = endDateInput.value;
       const limit = parseInt(limitInput.value, 10) || 10;
@@ -274,10 +276,6 @@
 
       if (!apiKey) {
         alert("請先填入 YouTube API Key");
-        return;
-      }
-      if (!query) {
-        alert("請輸入關鍵字 / 類型");
         return;
       }
       if (!startDate || !endDate) {
@@ -318,17 +316,13 @@
       }
     });
 
-    // 「本週 Shorts Top 50」快捷按鈕
+    // 「本週 Shorts Top 50」快捷按鈕（關鍵字可以留空）
     weeklyShortsBtn.addEventListener("click", () => {
       const apiKey = apiKeyInput.value.trim();
-      const query = queryInput.value.trim();
+      const query = queryInput.value.trim(); // 可為空
 
       if (!apiKey) {
         alert("請先填入 YouTube API Key");
-        return;
-      }
-      if (!query) {
-        alert("請輸入關鍵字 / 類型（中英文都可）");
         return;
       }
 
@@ -382,12 +376,16 @@
         key: apiKey,
         part: "id",
         type: "video",
-        q: query,
         maxResults: "50",      // 一次最多 50
         order: "viewCount",    // 依觀看數排序
         publishedAfter,
         publishedBefore
       });
+
+      // 關鍵字可留空，如果有才帶 q
+      if (query && query.length > 0) {
+        params.set("q", query);
+      }
 
       // 地區條件
       if (regionCode) {
